@@ -1,0 +1,77 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+
+# Build directories
+build/
+dist/
+out/
+
+# Uploads (keep structure, ignore content)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache
+.cache/
+.parcel-cache/
+.npm/
+.eslintcache
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Package manager files
+package-lock.json
+yarn.lock
+
+# Certificate files
+*.pem
+*.key
+*.crt
+
+# Temporary folders
+tmp/
+temp/
+.tmp/
+
+# Deployment files
+deploy.sh
+.deployment
+
+# Testing
+coverage/
+.nyc_output
+
+# Miscellaneous
+*.tgz
+*.tar.gz
+*.zip
+*.rar

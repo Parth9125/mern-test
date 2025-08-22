@@ -23,14 +23,46 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS configuration
-const corsOptions = {
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-app.use(cors(corsOptions));
+/**
+ * CORS configuration (multi-origin, production-safe)
+ * - Set CLIENT_URL in env as a comma-separated list of allowed origins
+ *   e.g. CLIENT_URL=https://your-frontend.vercel.app,http://localhost:3000
+ * - No trailing slashes in the origins
+ * - This callback ensures the response contains EXACTLY ONE origin that matches the request
+ */
+const allowedOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow non-browser clients (no Origin header) like curl/Postman
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.length === 0) {
+        // If no origins configured, default to blocking cross-origin in production
+        // and allowing localhost for development.
+        if (process.env.NODE_ENV !== 'production' && origin === 'http://localhost:3000') {
+          return callback(null, true);
+        }
+        return callback(new Error('CORS: No allowed origins configured'), false);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        // cors will set Access-Control-Allow-Origin to this single origin
+        return callback(null, true);
+      }
+
+      return callback(new Error('CORS: Origin not allowed'), false);
+    },
+    // Use true only if you rely on cookies; for bearer tokens keep this false
+    credentials: false,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  })
+);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -40,7 +72,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static('uploads'));
 
 // Database connection
-mongoose.connect(process.env.MONGO_URI)
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log('✅ Connected to MongoDB successfully');
   })
@@ -56,8 +89,8 @@ app.use('/api/lists', listRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
+  res.status(200).json({
+    status: 'OK',
     message: 'MERN Stack Backend is running successfully!',
     timestamp: new Date().toISOString(),
     version: '1.0.0'
